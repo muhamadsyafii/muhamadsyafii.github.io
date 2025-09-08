@@ -1,0 +1,11 @@
+# Menghilangkan .html di URL
+RewriteEngine On
+
+# Jika request cocok dengan file HTML
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^([^/]+)/?$ $1.html [L]
+
+# Opsional: redirect dari /index.html ke /
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html\ HTTP/
+RewriteRule ^index\.html$ / [R=301,L]
