@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Input Data Fasilitas Baru - JSON Output</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f9;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      textarea {
+        resize: vertical;
+      }
+      .facility-form {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        background-color: #fafafa;
+      }
+      .image-uploader {
+        margin-top: 15px;
+        padding: 10px;
+        border: 1px dashed #ccc;
+        border-radius: 4px;
+      }
+      .image-list {
+        margin-top: 10px;
+        padding: 5px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        background-color: #fff;
+      }
+      .image-list div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px dotted #eee;
+      }
+      .image-list div:last-child {
+        border-bottom: none;
+      }
+      .btn-success {
+        background-color: #5cb85c;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        margin-right: 10px;
+      }
+      .btn-success:hover {
+        background-color: #4cae4c;
+      }
+      .btn-download {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .btn-download:hover {
+        background-color: #0056b3;
+      }
+      #json-output {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #333;
+        color: #f8f8f8;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .btn-danger {
+        background-color: #d9534f;
+        margin-left: 10px;
+        padding: 5px 10px;
+      }
+      .btn-danger:hover {
+        background-color: #c9302c;
+      }
+      .btn-remove-facility {
+        margin-top: 10px;
+        padding: 8px 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Generator JSON Fasilitas 🛠️ (Download Added)</h1>
+      <p>Isi formulir, klik **Generate JSON**, lalu klik **Download JSON**.</p>
+
+      <div id="facility-container"></div>
+
+      <div style="margin-top: 20px">
+        <button class="btn-success" onclick="addFacility()">
+          Tambah Fasilitas Baru
+        </button>
+        <button class="btn-success" onclick="generateJson()">
+          Generate JSON
+        </button>
+        <button
+          class="btn-download"
+          onclick="downloadJson()"
+          id="download-button"
+          disabled
+        >
+          ⬇️ Download JSON
+        </button>
+      </div>
+
+      <hr />
+
+      <h2>Hasil JSON</h2>
+      <pre id="json-output">Tekan 'Generate JSON' untuk melihat hasilnya.</pre>
+    </div>
+
+    <script>
+      let facilityCounter = 0;
+      let globalImageIdCounter = 1;
+      let facilityData = {};
+      let lastGeneratedJson = null; // Menyimpan JSON terakhir yang dibuat
+
+      // Data awal untuk fasilitas pertama (berdasarkan contoh Anda)
+      const initialFacility = {
+        id: 1,
+        company_id: 1,
+        type: "FACILITY",
+        title: "Executive Lounge",
+        description:
+          "A quiet and elegant space designed for VIP guests or premium patients, offering a relaxing atmosphere, refreshments, and workspace amenities. Ideal for meetings, casual gatherings, or quiet reading.",
+        status: "ACTIVE",
+        qr_code_url: "",
+        contents: [
+          {
+            id: 1,
+            filename: "fc_meeting_room_1.webp",
+            mime_type: "image/webp",
+            extension: "webp",
+            sizebytes: 93,
+            url: "/media/fc_meeting_room_1.webp",
+          },
+          {
+            id: 2,
+            filename: "fc_meeting_room_2.webp",
+            mime_type: "image/jpeg",
+            extension: "jpg",
+            sizebytes: 121,
+            url: "/media/fc_meeting_room_2.webp",
+          },
+        ],
+      };
+
+      // Inisialisasi data dan counter
+      facilityData[1] = initialFacility;
+      facilityCounter = 1;
+      globalImageIdCounter = 3;
+
+      // Fungsi untuk merender HTML dari data fasilitas
+      function renderFacilityForm(id, data) {
+        const container = document.getElementById("facility-container");
+        const existingElement = document.getElementById(`facility-${id}`);
+
+        const facilityHtml = `
+            <div class="facility-form" id="facility-${id}">
+                ${id > 1 ? "<hr/>" : ""}
+                <h3>Detail Fasilitas ID: ${data.id}</h3>
+                
+                <label for="id-data-${id}">ID Fasilitas (Final JSON):</label>
+                <input type="number" class="facility-id" id="id-data-${id}" value="${
+          data.id
+        }" min="1" required>
+
+                <label for="title-${id}">Judul Fasilitas (title):</label>
+                <input type="text" class="facility-title" id="title-${id}" value="${
+          data.title
+        }" required>
+
+                <label for="description-${id}">Deskripsi (description):</label>
+                <textarea class="facility-description" id="description-${id}" rows="3" required>${
+          data.description
+        }</textarea>
+
+                <label for="status-${id}">Status:</label>
+                <select class="facility-status" id="status-${id}" required>
+                    <option value="ACTIVE" ${
+                      data.status === "ACTIVE" ? "selected" : ""
+                    }>ACTIVE</option>
+                    <option value="INACTIVE" ${
+                      data.status === "INACTIVE" ? "selected" : ""
+                    }>INACTIVE</option>
+                </select>
+
+                <label for="qr_code_url-${id}">QR Code URL (Opsional):</label>
+                <input type="text" class="facility-qr-code" id="qr_code_url-${id}" placeholder="https://..." value="${
+          data.qr_code_url
+        }">
+
+                <div class="image-uploader">
+                    <h4>Upload Gambar (Ambil Nama File)</h4>
+                    <input type="file" multiple accept="image/*" onchange="handleFileSelect(this, ${id})">
+                    <div class="image-list" id="image-list-${id}">
+                        </div>
+                </div>
+                ${
+                  Object.keys(facilityData).length > 1 || id > 1
+                    ? `<button class="btn-danger btn-remove-facility" onclick="removeFacility(${id})">Hapus Fasilitas</button>`
+                    : ""
+                }
+            </div>
+        `;
+
+        if (existingElement) {
+          existingElement.outerHTML = facilityHtml;
+        } else {
+          container.insertAdjacentHTML("beforeend", facilityHtml);
+        }
+
+        renderImageList(id);
+      }
+
+      function addFacility() {
+        facilityCounter++;
+        const newId = facilityCounter;
+        const newJsonId = facilityCounter > 1 ? facilityCounter : 2;
+
+        facilityData[newId] = {
+          id: newJsonId,
+          company_id: 1,
+          type: "FACILITY",
+          title: "",
+          description: "",
+          status: "ACTIVE",
+          qr_code_url: "",
+          contents: [],
+        };
+        renderFacilityForm(newId, facilityData[newId]);
+      }
+
+      function removeFacility(id) {
+        if (Object.keys(facilityData).length <= 1) {
+          alert("Tidak bisa menghapus fasilitas terakhir.");
+          return;
+        }
+
+        const element = document.getElementById(`facility-${id}`);
+        if (element) {
+          element.remove();
+          delete facilityData[id];
+          Object.keys(facilityData).forEach((key) =>
+            renderFacilityForm(parseInt(key), facilityData[parseInt(key)])
+          );
+        }
+      }
+
+      function handleFileSelect(inputElement, facilityId) {
+        const files = inputElement.files;
+        if (files.length === 0) return;
+
+        const newContents = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileName = file.name;
+          const fileParts = fileName.split(".");
+          const fileExtension = fileParts.length > 1 ? fileParts.pop() : "";
+          const mimeType = file.type || `image/${fileExtension}`;
+          const localUrl = `/media/${fileName}`;
+
+          newContents.push({
+            id: globalImageIdCounter++,
+            filename: fileName,
+            mime_type: mimeType,
+            extension: fileExtension,
+            sizebytes: file.size,
+            url: localUrl,
+          });
+        }
+
+        facilityData[facilityId].contents.push(...newContents);
+        inputElement.value = "";
+
+        renderImageList(facilityId);
+      }
+
+      function removeImage(facilityId, contentId) {
+        facilityData[facilityId].contents = facilityData[
+          facilityId
+        ].contents.filter((content) => content.id !== contentId);
+        renderImageList(facilityId);
+      }
+
+      function renderImageList(facilityId) {
+        const listElement = document.getElementById(`image-list-${facilityId}`);
+        if (!listElement) return;
+
+        listElement.innerHTML = "";
+
+        if (
+          !facilityData[facilityId] ||
+          facilityData[facilityId].contents.length === 0
+        ) {
+          listElement.innerHTML =
+            "<div>Belum ada gambar yang ditambahkan.</div>";
+          return;
+        }
+
+        facilityData[facilityId].contents.forEach((content) => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+                <span>${content.filename} (URL: <b>${content.url}</b>)</span>
+                <button class="btn-danger" style="padding: 5px; font-size: 12px; margin: 0;" onclick="removeImage(${facilityId}, ${content.id})">Hapus</button>
+            `;
+          listElement.appendChild(div);
+        });
+      }
+
+      // Fungsi utama untuk menggenerasi JSON
+      function generateJson() {
+        const facilityArray = [];
+
+        Object.keys(facilityData).forEach((key) => {
+          const id = parseInt(key);
+          const titleElement = document.getElementById(`title-${id}`);
+          const descElement = document.getElementById(`description-${id}`);
+          const statusElement = document.getElementById(`status-${id}`);
+          const qrCodeElement = document.getElementById(`qr_code_url-${id}`);
+          const idDataElement = document.getElementById(`id-data-${id}`);
+
+          if (titleElement && descElement && statusElement && idDataElement) {
+            // Update data dari form ke facilityData
+            facilityData[id].id = parseInt(idDataElement.value);
+            facilityData[id].title = titleElement.value;
+            facilityData[id].description = descElement.value;
+            facilityData[id].status = statusElement.value;
+            facilityData[id].qr_code_url = qrCodeElement.value;
+
+            // Buat objek untuk JSON final
+            const facility = {
+              id: facilityData[id].id,
+              company_id: 1,
+              type: "FACILITY",
+              title: facilityData[id].title,
+              description: facilityData[id].description,
+              status: facilityData[id].status,
+              qr_code_url: facilityData[id].qr_code_url,
+              created_at: new Date()
+                .toISOString()
+                .slice(0, 19)
+                .replace("T", " "),
+              updated_at: new Date()
+                .toISOString()
+                .slice(0, 19)
+                .replace("T", " "),
+              contents: facilityData[id].contents.map((content) => {
+                // Hilangkan sizebytes dan extension/mime_type yang tidak ada di contoh awal Anda,
+                // kecuali Anda ingin menyertakannya. Saya akan menyertakan yang lengkap.
+                return content;
+              }),
+            };
+            facilityArray.push(facility);
+          }
+        });
+
+        const finalJson = {
+          status: true,
+          messageTitle: "",
+          message: "Generated Facility List",
+          data: facilityArray,
+        };
+
+        // Simpan JSON yang digenerate dan aktifkan tombol download
+        lastGeneratedJson = finalJson;
+        document.getElementById("json-output").textContent = JSON.stringify(
+          finalJson,
+          null,
+          2
+        );
+        document.getElementById("download-button").disabled = false;
+      }
+
+      // FUNGSI BARU: Download JSON
+      function downloadJson() {
+        if (!lastGeneratedJson) {
+          alert("Harap generate JSON terlebih dahulu!");
+          return;
+        }
+
+        const jsonString = JSON.stringify(lastGeneratedJson, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        // Buat elemen <a> sementara untuk memicu download
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =
+          "facility_data_" + new Date().toISOString().slice(0, 10) + ".json";
+
+        // Simulasikan klik pada elemen <a>
+        document.body.appendChild(a);
+        a.click();
+
+        // Bersihkan elemen <a> sementara dan URL blob
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Inisialisasi: Panggil renderFacilityForm untuk data awal
+      document.addEventListener("DOMContentLoaded", () => {
+        renderFacilityForm(1, initialFacility);
+      });
+    </script>
+  </body>
+</html>
