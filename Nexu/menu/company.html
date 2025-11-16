@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Input Data Perusahaan & Home Slider | JSON Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f9;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-top: 15px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .section-box {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        background-color: #fafafa;
+      }
+      .image-uploader {
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px dashed #ccc;
+        border-radius: 4px;
+      }
+      .image-list {
+        margin-top: 10px;
+        padding: 5px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        background-color: #fff;
+      }
+      .image-list div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px dotted #eee;
+      }
+      .image-list div:last-child {
+        border-bottom: none;
+      }
+      .btn-action {
+        background-color: #5cb85c;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+        margin-right: 10px;
+      }
+      .btn-action:hover {
+        background-color: #4cae4c;
+      }
+      .btn-download {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .btn-download:hover {
+        background-color: #0056b3;
+      }
+      .btn-danger {
+        background-color: #d9534f;
+        margin-left: 10px;
+        padding: 5px 10px;
+      }
+      .btn-danger:hover {
+        background-color: #c9302c;
+      }
+      #json-output {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #333;
+        color: #f8f8f8;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Input Data Perusahaan & Home Slider 🏢</h1>
+      <p>Gunakan formulir ini untuk membuat JSON konfigurasi `company.json`.</p>
+
+      <div class="section-box">
+        <h2>Toolbar & Data Perusahaan (Company)</h2>
+        <label for="companyName"
+          >Nama Perusahaan (`toolbar.company.name`):</label
+        >
+        <input
+          type="text"
+          id="companyName"
+          value="To Hotel Indonesia"
+          required
+        />
+
+        <label for="companyImageFile"
+          >Logo Perusahaan (`toolbar.company.image`):</label
+        >
+        <div class="image-uploader">
+          <input
+            type="file"
+            id="companyImageFile"
+            accept="image/*"
+            onchange="handleSingleFileSelect(this, 'companyImageName')"
+          />
+          <div class="image-list" id="companyImageName"></div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <h2>Data Pengguna (User)</h2>
+        <label for="userName">Nama Pengguna (`toolbar.user.name`):</label>
+        <input type="text" id="userName" value="John Doe" required />
+
+        <label for="userImageURL"
+          >URL Gambar Pengguna (`toolbar.user.image`):</label
+        >
+        <input
+          type="text"
+          id="userImageURL"
+          value="https://avatars.githubusercontent.com/u/23512184"
+        />
+
+        <label for="userRoom">Nomor Kamar (`toolbar.user.room`):</label>
+        <input type="text" id="userRoom" value="A08" />
+      </div>
+
+      <div class="section-box">
+        <h2>Image Slider (Home Slider)</h2>
+        <label for="sliderImageFiles"
+          >Pilih Gambar Slider (`data.imgSlider`):</label
+        >
+        <div class="image-uploader">
+          <input
+            type="file"
+            multiple
+            id="sliderImageFiles"
+            accept="image/*"
+            onchange="handleMultipleFileSelect(this, 'sliderImageList')"
+          />
+          <div class="image-list" id="sliderImageList">
+            <div>
+              /media/slider_1.webp
+              <button
+                class="btn-danger"
+                style="padding: 5px; font-size: 12px; margin: 0"
+                onclick="removeSliderImage('/media/slider_1.webp')"
+              >
+                Hapus
+              </button>
+            </div>
+            <div>
+              /media/slider_2.webp
+              <button
+                class="btn-danger"
+                style="padding: 5px; font-size: 12px; margin: 0"
+                onclick="removeSliderImage('/media/slider_2.webp')"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-action" onclick="generateJson()">Generate JSON</button>
+      <button
+        class="btn-download"
+        onclick="downloadJson()"
+        id="download-button"
+        disabled
+      >
+        ⬇️ Download company.json
+      </button>
+
+      <hr />
+
+      <h2>Hasil JSON</h2>
+      <pre id="json-output">Tekan 'Generate JSON' untuk melihat hasilnya.</pre>
+    </div>
+
+    <script>
+      let lastGeneratedJson = null;
+      let sliderUrls = ["/media/slider_1.webp", "/media/slider_2.webp"];
+      let companyImageName = "company.webp"; // Nama file default untuk logo
+
+      // Inisialisasi tampilan gambar company
+      document.addEventListener("DOMContentLoaded", () => {
+        renderSingleImage("companyImageName", companyImageName);
+      });
+
+      // Fungsi untuk menangani input file tunggal (Logo Perusahaan)
+      function handleSingleFileSelect(inputElement, displayId) {
+        const file = inputElement.files[0];
+        if (!file) return;
+
+        const fileName = file.name;
+        companyImageName = fileName; // Simpan nama file
+        renderSingleImage(displayId, fileName);
+      }
+
+      // Fungsi untuk merender tampilan input file tunggal
+      function renderSingleImage(displayId, fileName) {
+        const listElement = document.getElementById(displayId);
+        if (!listElement) return;
+
+        const localUrl = `/media/${fileName}`;
+        listElement.innerHTML = `
+            <div>
+                <span>Nama File: ${fileName} (URL: <b>${localUrl}</b>)</span>
+                <button class="btn-danger" style="padding: 5px; font-size: 12px; margin: 0;" onclick="clearSingleImage('${displayId}')">Hapus</button>
+            </div>
+        `;
+      }
+
+      // Fungsi untuk meng-clear input file tunggal
+      function clearSingleImage(displayId) {
+        const inputElement = document.getElementById("companyImageFile");
+        if (inputElement) inputElement.value = ""; // Reset input file
+
+        companyImageName = ""; // Kosongkan nama file
+        const listElement = document.getElementById(displayId);
+        if (listElement)
+          listElement.innerHTML = "<div>Belum ada gambar yang dipilih.</div>";
+      }
+
+      // Fungsi untuk menangani input file multiple (Slider)
+      function handleMultipleFileSelect(inputElement, displayId) {
+        const files = inputElement.files;
+        if (files.length === 0) return;
+
+        const newUrls = [];
+        for (let i = 0; i < files.length; i++) {
+          const fileName = files[i].name;
+          const localUrl = `/media/${fileName}`;
+          newUrls.push(localUrl);
+        }
+
+        sliderUrls.push(...newUrls); // Tambahkan ke array global
+        inputElement.value = ""; // Reset input file
+
+        renderSliderList(displayId);
+      }
+
+      // Fungsi untuk menghapus gambar slider
+      function removeSliderImage(urlToRemove) {
+        sliderUrls = sliderUrls.filter((url) => url !== urlToRemove);
+        renderSliderList("sliderImageList");
+      }
+
+      // Fungsi untuk merender tampilan daftar slider
+      function renderSliderList(displayId) {
+        const listElement = document.getElementById(displayId);
+        if (!listElement) return;
+
+        listElement.innerHTML = "";
+        if (sliderUrls.length === 0) {
+          listElement.innerHTML =
+            "<div>Belum ada gambar slider yang ditambahkan.</div>";
+          return;
+        }
+
+        sliderUrls.forEach((url) => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+                <span>${url}</span>
+                <button class="btn-danger" style="padding: 5px; font-size: 12px; margin: 0;" onclick="removeSliderImage('${url}')">Hapus</button>
+            `;
+          listElement.appendChild(div);
+        });
+      }
+
+      // Fungsi utama untuk menggenerasi JSON
+      function generateJson() {
+        // Ambil data dari form
+        const cName = document.getElementById("companyName").value;
+        const uName = document.getElementById("userName").value;
+        const uImage = document.getElementById("userImageURL").value;
+        const uRoom = document.getElementById("userRoom").value;
+
+        // Buat URL Gambar Perusahaan (tetap gunakan companyImageName yang disimpan)
+        const companyImageUrl = companyImageName
+          ? `/media/${companyImageName}`
+          : "";
+
+        // Buat objek JSON akhir
+        const finalJson = {
+          success: true,
+          messageTitle: "Success",
+          message: "Generated company configuration success",
+          responseTime: "0 ms.",
+          data: {
+            toolbar: {
+              company: {
+                name: cName,
+                image: companyImageUrl,
+              },
+              user: {
+                name: uName,
+                image: uImage,
+                room: uRoom,
+              },
+            },
+            imgSlider: sliderUrls,
+          },
+        };
+
+        // Simpan JSON yang digenerate dan aktifkan tombol download
+        lastGeneratedJson = finalJson;
+        document.getElementById("json-output").textContent = JSON.stringify(
+          finalJson,
+          null,
+          2
+        );
+        document.getElementById("download-button").disabled = false;
+      }
+
+      // FUNGSI DOWNLOAD JSON
+      function downloadJson() {
+        if (!lastGeneratedJson) {
+          alert("Harap generate JSON terlebih dahulu!");
+          return;
+        }
+
+        const jsonString = JSON.stringify(lastGeneratedJson, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "company.json"; // Nama file sesuai permintaan
+
+        document.body.appendChild(a);
+        a.click();
+
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Panggil fungsi renderSliderList agar daftar slider awal terlihat
+      document.addEventListener("DOMContentLoaded", () => {
+        renderSliderList("sliderImageList");
+      });
+    </script>
+  </body>
+</html>
