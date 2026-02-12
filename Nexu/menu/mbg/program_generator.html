@@ -5,125 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Input Data Fasilitas Baru - JSON Output</title>
     <link rel="icon" type="image/ico" href="../favicon.ico" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        background-color: #f4f4f9;
-      }
-      .container {
-        max-width: 800px;
-        margin: auto;
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
-      h1 {
-        color: #333;
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
-      }
-      label {
-        display: block;
-        margin-top: 10px;
-        font-weight: bold;
-      }
-      input[type="text"],
-      input[type="number"],
-      select,
-      textarea {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        box-sizing: border-box;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-      textarea {
-        resize: vertical;
-      }
-      .facility-form {
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 4px;
-        background-color: #fafafa;
-      }
-      .image-uploader {
-        margin-top: 15px;
-        padding: 10px;
-        border: 1px dashed #ccc;
-        border-radius: 4px;
-      }
-      .image-list {
-        margin-top: 10px;
-        padding: 5px;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        background-color: #fff;
-      }
-      .image-list div {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 5px 0;
-        border-bottom: 1px dotted #eee;
-      }
-      .image-list div:last-child {
-        border-bottom: none;
-      }
-      .btn-success {
-        background-color: #5cb85c;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-        margin-right: 10px;
-      }
-      .btn-success:hover {
-        background-color: #4cae4c;
-      }
-      .btn-download {
-        background-color: #007bff;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-      .btn-download:hover {
-        background-color: #0056b3;
-      }
-      #json-output {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #333;
-        color: #f8f8f8;
-        border-radius: 4px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-      .btn-danger {
-        background-color: #d9534f;
-        margin-left: 10px;
-        padding: 5px 10px;
-      }
-      .btn-danger:hover {
-        background-color: #c9302c;
-      }
-      .btn-remove-facility {
-        margin-top: 10px;
-        padding: 8px 12px;
-      }
-    </style>
+    <link rel="stylesheet" href="../../style.css" />
   </head>
   <body>
     <div class="container">
-      <h1>Generator JSON Fasilitas 🛠️ (Download Added)</h1>
+      <h1>Generator JSON Program & Manfaat 🛠️ (Download Added)</h1>
       <p>Isi formulir, klik **Generate JSON**, lalu klik **Download JSON**.</p>
 
       <div id="facility-container"></div>
@@ -161,7 +47,7 @@
       const initialFacility = {
         id: 1,
         company_id: 1,
-        type: "FACILITY",
+        type: "Program & Manfaat",
         title: "Executive Lounge",
         description:
           "A quiet and elegant space designed for VIP guests or premium patients, offering a relaxing atmosphere, refreshments, and workspace amenities. Ideal for meetings, casual gatherings, or quiet reading.",
@@ -207,7 +93,7 @@
           data.id
         }" min="1" required>
 
-                <label for="title-${id}">Judul Fasilitas (title):</label>
+                <label for="title-${id}">Judul Program & Manfaat (title):</label>
                 <input type="text" class="facility-title" id="title-${id}" value="${
           data.title
         }" required>
@@ -233,7 +119,7 @@
         }">
 
                 <div class="image-uploader">
-                    <h4>Upload Gambar (Ambil Nama File)</h4>
+                     <h4>Upload Media (Ambil Nama File Gambar & Video MP4)</h4>
                     <input type="file" multiple accept="image/*" onchange="handleFileSelect(this, ${id})">
                     <div class="image-list" id="image-list-${id}">
                         </div>
@@ -263,7 +149,7 @@
         facilityData[newId] = {
           id: newJsonId,
           company_id: 1,
-          type: "FACILITY",
+          type: "Program & Manfaat",
           title: "",
           description: "",
           status: "ACTIVE",
@@ -379,7 +265,7 @@
             const facility = {
               id: facilityData[id].id,
               company_id: 1,
-              type: "FACILITY",
+              type: "Program & Manfaat",
               title: facilityData[id].title,
               description: facilityData[id].description,
               status: facilityData[id].status,
@@ -405,7 +291,7 @@
         const finalJson = {
           status: true,
           messageTitle: "",
-          message: "Generated Facility List",
+          message: "Generated Program & Manfaat Detail",
           data: facilityArray,
         };
 
@@ -433,7 +319,7 @@
         // Buat elemen <a> sementara untuk memicu download
         const a = document.createElement("a");
         a.href = url;
-        a.download = "facility.json";
+        a.download = "program.json";
 
         // Simulasikan klik pada elemen <a>
         document.body.appendChild(a);

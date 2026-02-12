@@ -3,231 +3,402 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NexuScreen</title>
+    <title>NX Generator Tools</title>
+    <meta property="og:title" content="NX Generator Helper Tools" />
+    <meta
+      property="og:description"
+      content="Dashboard generator konten digital signage untuk Public, MBG, dan School. Download sample content dan generate JSON dengan mudah."
+    />
+    <meta property="og:image" content="thumbnail-nexu.jpg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://nx.pilkupil.my.id/" />
+    <meta name="theme-color" content="#0f172a" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="icon" type="image/ico" href="favicon.ico" />
+
     <style>
-      /* Variabel CSS untuk Warna Glow */
       :root {
-        --glow-color: #00ff00;
-        --dark-bg: #000000;
-        --item-bg: rgba(0, 0, 0, 0.7);
+        /* Warna Brand (Sesuai Logo) */
+        --brand-red: #ef4444;
+        --brand-green: #10b981;
+        --brand-blue: #3b82f6;
+
+        /* Modern Dark Theme Palette */
+        --bg-body: #0f172a; /* Slate 900 */
+        --bg-sidebar: #1e293b; /* Slate 800 */
+        --bg-card: #1e293b;
+        --bg-hover: #334155;
+        --bg-active: rgba(59, 130, 246, 0.15);
+
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.08);
       }
 
-      /* Gaya Dasar */
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        background-color: var(--dark-bg);
-        color: var(--glow-color);
-        font-family: "Consolas", "Courier New", monospace;
-        padding: 20px;
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* --- 1. SIDEBAR --- */
+      .sidebar {
+        width: 300px;
+        background-color: var(--bg-sidebar);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .brand-area {
+        padding: 25px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+      }
+
+      .brand-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(
+          to right,
+          var(--brand-red),
+          var(--brand-blue),
+          var(--brand-green)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         margin: 0;
       }
 
-      /* Judul Utama */
-      h1 {
-        text-align: center;
-        text-shadow: 0 0 10px var(--glow-color), 0 0 20px #00cc00;
-        margin-bottom: 40px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid var(--glow-color);
+      .menu-list {
+        list-style: none;
+        padding: 20px 15px;
+        margin: 0;
+        overflow-y: auto;
+        flex-grow: 1;
       }
 
-      /* Pengelompokan Link (Section) */
-      .group-section {
-        margin-bottom: 40px;
-        padding: 20px;
-        border: 1px solid rgba(0, 255, 0, 0.3);
-        border-radius: 8px;
-        background-color: var(--item-bg);
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+      .menu-item {
+        margin-bottom: 8px;
       }
 
-      .group-section h2 {
-        font-size: 1.5em;
-        color: var(--glow-color);
-        text-shadow: 0 0 5px var(--glow-color);
-        border-bottom: 1px dashed rgba(0, 255, 0, 0.5);
-        padding-bottom: 10px;
-        margin-top: 0;
-        margin-bottom: 20px;
+      .menu-btn {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        padding: 14px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        line-height: 1.4;
       }
 
-      /* Container Grid untuk Kolom */
+      .menu-btn:hover {
+        background-color: var(--bg-hover);
+        color: var(--text-main);
+      }
+
+      /* State Aktif (Menu yang sedang dipilih) */
+      .menu-btn.active {
+        background-color: var(--bg-active);
+        color: var(--brand-blue);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+      }
+
+      /* --- 2. MAIN CONTENT AREA --- */
+      .main-content {
+        flex-grow: 1;
+        padding: 40px;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      /* Container Section */
+      .content-section {
+        display: none; /* Sembunyikan semua section secara default */
+        animation: fadeIn 0.4s ease;
+      }
+
+      .content-section.active {
+        display: block; /* Tampilkan hanya yang aktif */
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-header {
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-main);
+      }
+
+      /* GRID KARTU */
       .link-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         list-style: none;
         padding: 0;
         margin: 0;
       }
 
-      /* Item Link (Box) */
       .link-item {
-        padding: 15px;
-        border: 1px solid rgba(0, 255, 0, 0.5);
-        border-radius: 4px;
-        background-color: rgba(0, 0, 0, 0.3);
-        transition: transform 0.3s, box-shadow 0.3s;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
       }
 
       .link-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 0 10px var(--glow-color), 0 0 20px #00cc00;
+        transform: translateY(-5px);
+        border-color: var(--brand-blue);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6);
       }
 
-      /* Konten Link (A tag) */
+      /* Garis Gradasi di atas kartu */
+      .link-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          var(--brand-red),
+          var(--brand-green),
+          var(--brand-blue)
+        );
+        opacity: 0.8;
+      }
+
       .link-content {
         display: flex;
-        align-items: center;
+        padding: 25px;
         text-decoration: none;
-        color: var(--glow-color);
-      }
-
-      .link-content a {
         color: inherit;
-        text-decoration: none;
+        height: 100%;
+        align-items: flex-start;
       }
 
-      /* Ikon SVG Glowing */
       .link-icon {
-        width: 20px;
-        height: 20px;
-        min-width: 20px; /* Penting untuk menjaga ukuran */
-        margin-right: 10px;
-        fill: var(--glow-color);
-        filter: drop-shadow(0 0 3px var(--glow-color))
-          drop-shadow(0 0 6px var(--glow-color));
+        width: 32px;
+        height: 32px;
+        margin-right: 15px;
+        fill: var(--text-muted);
+        flex-shrink: 0;
+        transition: fill 0.2s;
       }
 
-      /* Teks Link */
-      .link-text {
-        flex-grow: 1;
-        text-align: left;
-        overflow: hidden; /* Tambahkan ini agar deskripsi tidak melebar */
+      .link-item:hover .link-icon {
+        fill: var(--brand-blue);
       }
 
-      /* Judul Link */
+      .link-info {
+        display: flex;
+        flex-direction: column;
+      }
       .link-title {
-        font-size: 1.1em;
-        font-weight: bold;
-        line-height: 1.2;
-        text-shadow: 0 0 3px var(--glow-color);
-        /* Potong judul jika terlalu panjang, tapi ini lebih baik dihindari untuk link */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--text-main);
+      }
+      .link-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.5;
       }
 
-      /* Deskripsi Link */
-      .link-description {
-        font-size: 0.85em;
-        color: rgba(0, 255, 0, 0.7);
-        margin-top: 3px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+      /* Responsive Mobile */
+      @media (max-width: 800px) {
+        body {
+          flex-direction: column;
+          overflow: auto;
+        }
+        .sidebar {
+          width: 100%;
+          height: auto;
+          border-right: none;
+          border-bottom: 1px solid var(--border-color);
+        }
+        .menu-list {
+          display: flex;
+          overflow-x: auto;
+          padding: 10px;
+          white-space: nowrap;
+        }
+        .menu-item {
+          margin-bottom: 0;
+          margin-right: 10px;
+        }
+        .main-content {
+          padding: 20px;
+          overflow: visible;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>✨ NexuScreen Helper ✨</h1>
+    <aside class="sidebar">
+      <div class="brand-area">
+        <h1 class="brand-title">NX Generator Tools</h1>
+      </div>
+      <ul class="menu-list" id="sidebar-menu"></ul>
+    </aside>
 
-    <div id="links-container"></div>
+    <main class="main-content" id="main-container"></main>
 
     <script>
-      // Fungsi untuk me-render data ke HTML
-      function renderBookmarks(data) {
-        const container = document.getElementById("links-container");
-        container.innerHTML = ""; // Bersihkan konten lama
+      // Fungsi untuk membuat ID yang aman dari Judul yang mengandung Spasi/Emoji
+      // Contoh: "🛠️ Generator Public" -> "generator-public"
+      function createSafeId(str) {
+        return str
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, "") // Hapus emoji & karakter aneh
+          .trim()
+          .replace(/\s+/g, "-"); // Ganti spasi dengan strip
+      }
 
-        data.forEach((group) => {
-          // 1. Buat Section Group
-          const section = document.createElement("section");
-          section.className = "group-section";
+      function renderDashboard(data) {
+        const sidebarMenu = document.getElementById("sidebar-menu");
+        const mainContainer = document.getElementById("main-container");
 
-          const title = document.createElement("h2");
-          title.textContent = group.groupTitle;
-          section.appendChild(title);
+        sidebarMenu.innerHTML = "";
+        mainContainer.innerHTML = "";
 
-          // 2. Buat Container Grid (UL)
+        data.forEach((group, index) => {
+          // 1. Buat ID Unik untuk setiap kategori
+          // Jika generate gagal (string kosong), pakai index sebagai fallback
+          const sectionId = createSafeId(group.groupTitle) || `group-${index}`;
+
+          // 2. Buat Menu Sidebar
+          const li = document.createElement("li");
+          li.className = "menu-item";
+
+          const btn = document.createElement("button");
+          btn.className = `menu-btn ${index === 0 ? "active" : ""}`; // Menu pertama otomatis aktif
+          btn.textContent = group.groupTitle; // Tetap tampilkan Emoji aslinya di teks
+
+          // Event Klik Sidebar
+          btn.onclick = () => {
+            // Reset semua active
+            document
+              .querySelectorAll(".menu-btn")
+              .forEach((b) => b.classList.remove("active"));
+            document
+              .querySelectorAll(".content-section")
+              .forEach((s) => s.classList.remove("active"));
+
+            // Set active yang diklik
+            btn.classList.add("active");
+            document.getElementById(sectionId).classList.add("active");
+          };
+
+          li.appendChild(btn);
+          sidebarMenu.appendChild(li);
+
+          // 3. Buat Konten Section
+          const section = document.createElement("div");
+          section.className = `content-section ${index === 0 ? "active" : ""}`;
+          section.id = sectionId;
+
+          // Header Kategori
+          const header = document.createElement("div");
+          header.className = "section-header";
+          const h2 = document.createElement("h2");
+          h2.className = "section-title";
+          h2.textContent = group.groupTitle;
+          header.appendChild(h2);
+          section.appendChild(header);
+
+          // Grid Kartu
           const ul = document.createElement("ul");
           ul.className = "link-grid";
 
           group.links.forEach((link) => {
-            // 3. Buat Item Link (LI)
-            const li = document.createElement("li");
-            li.className = "link-item";
-
-            // 4. Buat Konten Link (A)
-            const a = document.createElement("a");
-            a.className = "link-content";
-            a.href = link.url;
-            a.target = "_blank"; // Membuka di tab baru
-
-            // 5. Tambahkan SVG Icon
-            const svg = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "svg"
-            );
-            svg.setAttribute("class", "link-icon");
-            svg.setAttribute("viewBox", "0 0 24 24");
-
-            const path = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "path"
-            );
-            path.setAttribute("d", link.svgPath);
-            svg.appendChild(path);
-
-            a.appendChild(svg);
-
-            // 6. Tambahkan Teks (Title & Description)
-            const textDiv = document.createElement("div");
-            textDiv.className = "link-text";
-
-            const titleDiv = document.createElement("div");
-            titleDiv.className = "link-title";
-            titleDiv.textContent = link.title;
-
-            const descDiv = document.createElement("div");
-            descDiv.className = "link-description";
-            descDiv.textContent = link.description;
-
-            textDiv.appendChild(titleDiv);
-            textDiv.appendChild(descDiv);
-            a.appendChild(textDiv);
-
-            li.appendChild(a);
-            ul.appendChild(li);
+            const card = document.createElement("li");
+            card.className = "link-item";
+            card.innerHTML = `
+                        <a href="${link.url}" class="link-content" target="_blank">
+                            <svg class="link-icon" viewBox="0 0 24 24"><path d="${link.svgPath}"></path></svg>
+                            <div class="link-info">
+                                <span class="link-title">${link.title}</span>
+                                <span class="link-desc">${link.description}</span>
+                            </div>
+                        </a>
+                    `;
+            ul.appendChild(card);
           });
 
           section.appendChild(ul);
-          container.appendChild(section);
+          mainContainer.appendChild(section);
         });
       }
 
-      // --- Proses Memuat Data JSON ---
+      // --- LOAD DATA JSON DARI FILE EKSTERNAL ---
       fetch("links.json")
         .then((response) => {
-          // Pastikan response berhasil
           if (!response.ok) {
             throw new Error(
-              "Gagal memuat links.json. Pastikan file ada di folder yang sama."
+              "Gagal load links.json. Pastikan file ada di folder yang sama."
             );
           }
           return response.json();
         })
         .then((data) => {
-          // Panggil fungsi render setelah data dimuat
-          renderBookmarks(data);
+          // Render data setelah berhasil diambil
+          renderDashboard(data);
         })
         .catch((error) => {
-          console.error("Error:", error);
+          console.error(error);
           document.getElementById(
-            "links-container"
-          ).innerHTML = `<p style="color:red; text-align:center;">
-                        Error memuat data: ${error.message}
-                    </p>`;
+            "main-container"
+          ).innerHTML = `<div style="text-align:center; padding: 50px;">
+                        <h3 style="color: var(--brand-red);">Gagal Memuat Data</h3>
+                        <p style="color: var(--text-muted);">${error.message}</p>
+                    </div>`;
         });
     </script>
   </body>

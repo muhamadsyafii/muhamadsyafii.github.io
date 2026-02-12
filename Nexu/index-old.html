@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexuScreen</title>
+    <link rel="icon" type="image/ico" href="favicon.ico" />
+    <style>
+      /* Variabel CSS untuk Warna Glow */
+      :root {
+        --glow-color: #00ff00;
+        --dark-bg: #000000;
+        --item-bg: rgba(0, 0, 0, 0.7);
+      }
+
+      /* Gaya Dasar */
+      body {
+        background-color: var(--dark-bg);
+        color: var(--glow-color);
+        font-family: "Consolas", "Courier New", monospace;
+        padding: 20px;
+        margin: 0;
+      }
+
+      /* Judul Utama */
+      h1 {
+        text-align: center;
+        text-shadow: 0 0 10px var(--glow-color), 0 0 20px #00cc00;
+        margin-bottom: 40px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--glow-color);
+      }
+
+      /* Pengelompokan Link (Section) */
+      .group-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        border-radius: 8px;
+        background-color: var(--item-bg);
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+      }
+
+      .group-section h2 {
+        font-size: 1.5em;
+        color: var(--glow-color);
+        text-shadow: 0 0 5px var(--glow-color);
+        border-bottom: 1px dashed rgba(0, 255, 0, 0.5);
+        padding-bottom: 10px;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+
+      /* Container Grid untuk Kolom */
+      .link-grid {
+        display: grid;
+        /* grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); */
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      /* Item Link (Box) */
+      .link-item {
+        padding: 15px;
+        border: 1px solid rgba(0, 255, 0, 0.5);
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .link-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 10px var(--glow-color), 0 0 20px #00cc00;
+      }
+
+      /* Konten Link (A tag) */
+      .link-content {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--glow-color);
+      }
+
+      .link-content a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* Ikon SVG Glowing */
+      .link-icon {
+        width: 20px;
+        height: 20px;
+        min-width: 20px; /* Penting untuk menjaga ukuran */
+        margin-right: 10px;
+        fill: var(--glow-color);
+        filter: drop-shadow(0 0 3px var(--glow-color))
+          drop-shadow(0 0 6px var(--glow-color));
+      }
+
+      /* Teks Link */
+      .link-text {
+        flex-grow: 1;
+        text-align: left;
+        overflow: hidden; /* Tambahkan ini agar deskripsi tidak melebar */
+      }
+
+      /* Judul Link */
+      .link-title {
+        font-size: 1.1em;
+        font-weight: bold;
+        line-height: 1.2;
+        text-shadow: 0 0 3px var(--glow-color);
+        /* Potong judul jika terlalu panjang, tapi ini lebih baik dihindari untuk link */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Deskripsi Link */
+      .link-description {
+        font-size: 0.85em;
+        color: rgba(0, 255, 0, 0.7);
+        margin-top: 3px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>✨ NexuScreen Helper ✨</h1>
+
+    <div id="links-container"></div>
+
+    <script>
+      // Fungsi untuk me-render data ke HTML
+      function renderBookmarks(data) {
+        const container = document.getElementById("links-container");
+        container.innerHTML = ""; // Bersihkan konten lama
+
+        data.forEach((group) => {
+          // 1. Buat Section Group
+          const section = document.createElement("section");
+          section.className = "group-section";
+
+          const title = document.createElement("h2");
+          title.textContent = group.groupTitle;
+          section.appendChild(title);
+
+          // 2. Buat Container Grid (UL)
+          const ul = document.createElement("ul");
+          ul.className = "link-grid";
+
+          group.links.forEach((link) => {
+            // 3. Buat Item Link (LI)
+            const li = document.createElement("li");
+            li.className = "link-item";
+
+            // 4. Buat Konten Link (A)
+            const a = document.createElement("a");
+            a.className = "link-content";
+            a.href = link.url;
+            a.target = "_blank"; // Membuka di tab baru
+
+            // 5. Tambahkan SVG Icon
+            const svg = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "svg"
+            );
+            svg.setAttribute("class", "link-icon");
+            svg.setAttribute("viewBox", "0 0 24 24");
+
+            const path = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "path"
+            );
+            path.setAttribute("d", link.svgPath);
+            svg.appendChild(path);
+
+            a.appendChild(svg);
+
+            // 6. Tambahkan Teks (Title & Description)
+            const textDiv = document.createElement("div");
+            textDiv.className = "link-text";
+
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "link-title";
+            titleDiv.textContent = link.title;
+
+            const descDiv = document.createElement("div");
+            descDiv.className = "link-description";
+            descDiv.textContent = link.description;
+
+            textDiv.appendChild(titleDiv);
+            textDiv.appendChild(descDiv);
+            a.appendChild(textDiv);
+
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+
+          section.appendChild(ul);
+          container.appendChild(section);
+        });
+      }
+
+      // --- Proses Memuat Data JSON ---
+      fetch("links.json")
+        .then((response) => {
+          // Pastikan response berhasil
+          if (!response.ok) {
+            throw new Error(
+              "Gagal memuat links.json. Pastikan file ada di folder yang sama."
+            );
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // Panggil fungsi render setelah data dimuat
+          renderBookmarks(data);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          document.getElementById(
+            "links-container"
+          ).innerHTML = `<p style="color:red; text-align:center;">
+                        Error memuat data: ${error.message}
+                    </p>`;
+        });
+    </script>
+  </body>
+</html>

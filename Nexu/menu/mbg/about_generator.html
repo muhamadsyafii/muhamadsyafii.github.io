@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generator JSON Fasilitas (Media & Video)</title>
+    <link rel="icon" type="image/ico" href="../favicon.ico" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Generator JSON ABOUT 🛠️</h1>
+      <p>
+        Isi formulir, upload **Gambar atau Video (MP4)**, lalu download
+        hasilnya.
+      </p>
+
+      <div id="facility-container"></div>
+
+      <div style="margin-top: 20px">
+        <button class="btn-success" onclick="addFacility()">
+          Tambah Fasilitas Baru
+        </button>
+        <button class="btn-success" onclick="generateJson()">
+          Generate JSON
+        </button>
+        <button
+          class="btn-download"
+          onclick="downloadJson()"
+          id="download-button"
+          disabled
+        >
+          ⬇️ Download JSON
+        </button>
+      </div>
+
+      <hr />
+
+      <h2>Hasil JSON</h2>
+      <pre id="json-output">Tekan 'Generate JSON' untuk melihat hasilnya.</pre>
+    </div>
+
+    <script>
+      let facilityCounter = 0;
+      let globalImageIdCounter = 1;
+      let facilityData = {};
+      let lastGeneratedJson = null;
+
+      const initialFacility = {
+        id: 1,
+        company_id: 1,
+        type: "ABOUT",
+        title: "Executive Lounge",
+        description:
+          "A quiet and elegant space designed for VIP guests or premium patients, offering a relaxing atmosphere, refreshments, and workspace amenities. Ideal for meetings, casual gatherings, or quiet reading.",
+        status: "ACTIVE",
+        qr_code_url: "",
+        contents: [],
+      };
+
+      facilityData[1] = initialFacility;
+      facilityCounter = 1;
+
+      function renderFacilityForm(id, data) {
+        const container = document.getElementById("facility-container");
+        const existingElement = document.getElementById(`facility-${id}`);
+
+        const facilityHtml = `
+            <div class="facility-form" id="facility-${id}">
+                ${id > 1 ? "<hr/>" : ""}
+                <h3>Detail Fasilitas ID: ${data.id}</h3>
+                
+                <label for="id-data-${id}">ID Fasilitas:</label>
+                <input type="number" class="facility-id" id="id-data-${id}" value="${
+          data.id
+        }" min="1" required>
+
+                <label for="title-${id}">Judul (title):</label>
+                <input type="text" class="facility-title" id="title-${id}" value="${
+          data.title
+        }" required>
+
+                <label for="description-${id}">Deskripsi:</label>
+                <textarea class="facility-description" id="description-${id}" rows="3" required>${
+          data.description
+        }</textarea>
+
+                <label for="status-${id}">Status:</label>
+                <select class="facility-status" id="status-${id}" required>
+                    <option value="ACTIVE" ${
+                      data.status === "ACTIVE" ? "selected" : ""
+                    }>ACTIVE</option>
+                    <option value="INACTIVE" ${
+                      data.status === "INACTIVE" ? "selected" : ""
+                    }>INACTIVE</option>
+                </select>
+
+                <label for="qr_code_url-${id}">QR Code URL:</label>
+                <input type="text" class="facility-qr-code" id="qr_code_url-${id}" value="${
+          data.qr_code_url
+        }">
+
+                <div class="image-uploader">
+                    <h4>Upload Media (Gambar & Video MP4)</h4>
+                    <input type="file" multiple accept="image/*,video/mp4" onchange="handleFileSelect(this, ${id})">
+                    <div class="image-list" id="image-list-${id}"></div>
+                </div>
+                ${
+                  Object.keys(facilityData).length > 1 || id > 1
+                    ? `<button class="btn-danger btn-remove-facility" onclick="removeFacility(${id})">Hapus Fasilitas</button>`
+                    : ""
+                }
+            </div>
+        `;
+
+        if (existingElement) {
+          existingElement.outerHTML = facilityHtml;
+        } else {
+          container.insertAdjacentHTML("beforeend", facilityHtml);
+        }
+        renderImageList(id);
+      }
+
+      function addFacility() {
+        facilityCounter++;
+        const newId = facilityCounter;
+        facilityData[newId] = {
+          id: newId,
+          company_id: 1,
+          type: "ABOUT",
+          title: "",
+          description: "",
+          status: "ACTIVE",
+          qr_code_url: "",
+          contents: [],
+        };
+        renderFacilityForm(newId, facilityData[newId]);
+      }
+
+      function removeFacility(id) {
+        if (Object.keys(facilityData).length <= 1) return;
+        const element = document.getElementById(`facility-${id}`);
+        if (element) {
+          element.remove();
+          delete facilityData[id];
+        }
+      }
+
+      function handleFileSelect(inputElement, facilityId) {
+        const files = inputElement.files;
+        if (files.length === 0) return;
+
+        const newContents = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileName = file.name;
+          const fileExtension = fileName.split(".").pop().toLowerCase();
+
+          // Logika deteksi Mime Type untuk MP4 dan Gambar
+          let mimeType = file.type;
+          if (!mimeType) {
+            mimeType =
+              fileExtension === "mp4" ? "video/mp4" : `image/${fileExtension}`;
+          }
+
+          newContents.push({
+            id: globalImageIdCounter++,
+            filename: fileName,
+            mime_type: mimeType,
+            extension: fileExtension,
+            sizebytes: file.size,
+            url: `/media/${fileName}`,
+          });
+        }
+
+        facilityData[facilityId].contents.push(...newContents);
+        inputElement.value = "";
+        renderImageList(facilityId);
+      }
+
+      function renderImageList(facilityId) {
+        const listElement = document.getElementById(`image-list-${facilityId}`);
+        if (!listElement) return;
+        listElement.innerHTML = "";
+
+        if (
+          !facilityData[facilityId] ||
+          facilityData[facilityId].contents.length === 0
+        ) {
+          listElement.innerHTML =
+            "<div>Belum ada media yang ditambahkan.</div>";
+          return;
+        }
+
+        facilityData[facilityId].contents.forEach((content) => {
+          const isVideo = content.mime_type.includes("video");
+          const icon = isVideo ? "🎥" : "🖼️";
+          const div = document.createElement("div");
+          div.style.marginBottom = "5px";
+          div.innerHTML = `
+                <span>${icon} <b>${content.filename}</b> (Type: ${content.mime_type})</span>
+                <button class="btn-danger" style="padding: 2px 8px; margin-left:10px;" onclick="removeImage(${facilityId}, ${content.id})">x</button>
+            `;
+          listElement.appendChild(div);
+        });
+      }
+
+      function removeImage(facilityId, contentId) {
+        facilityData[facilityId].contents = facilityData[
+          facilityId
+        ].contents.filter((c) => c.id !== contentId);
+        renderImageList(facilityId);
+      }
+
+      function generateJson() {
+        const facilityArray = [];
+        Object.keys(facilityData).forEach((key) => {
+          const id = parseInt(key);
+          const f = facilityData[id];
+
+          const title = document.getElementById(`title-${id}`).value;
+          const desc = document.getElementById(`description-${id}`).value;
+          const status = document.getElementById(`status-${id}`).value;
+          const qr = document.getElementById(`qr_code_url-${id}`).value;
+          const realId = document.getElementById(`id-data-${id}`).value;
+
+          facilityArray.push({
+            id: parseInt(realId),
+            company_id: 1,
+            type: "ABOUT",
+            title: title,
+            description: desc,
+            status: status,
+            qr_code_url: qr,
+            created_at: new Date().toISOString().slice(0, 19).replace("T", " "),
+            updated_at: new Date().toISOString().slice(0, 19).replace("T", " "),
+            contents: f.contents,
+          });
+        });
+
+        lastGeneratedJson = {
+          status: true,
+          message: "Generated",
+          data: facilityArray,
+        };
+        document.getElementById("json-output").textContent = JSON.stringify(
+          lastGeneratedJson,
+          null,
+          2
+        );
+        document.getElementById("download-button").disabled = false;
+      }
+
+      function downloadJson() {
+        if (!lastGeneratedJson) return;
+        const blob = new Blob([JSON.stringify(lastGeneratedJson, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "about_facility.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      document.addEventListener("DOMContentLoaded", () =>
+        renderFacilityForm(1, initialFacility)
+      );
+    </script>
+  </body>
+</html>

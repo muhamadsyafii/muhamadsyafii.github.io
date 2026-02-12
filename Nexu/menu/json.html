@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>JSON Viewer Otomatis (Warna Biru)</title>
+    <style>
+      /* --- Style Umum & Kontainer --- */
+      .main-content {
+        display: flex;
+        border: 1px solid #ccc;
+        border-top: none;
+        height: 850px;
+        background-color: #fff;
+      }
+      .tab-content {
+        display: none;
+        border: 1px solid #ccc;
+        border-top: none;
+        height: 600px;
+        overflow: auto;
+        background-color: #fff;
+      }
+      /* Style untuk Text Area */
+      #output-raw {
+        width: 100%;
+        height: 100%;
+        border: none;
+        resize: none;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      /* --- Style Pohon JSON --- */
+      #json-tree-view {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 14px;
+        color: #333;
+        padding: 5px;
+      }
+
+      .json-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+      }
+      .json-list ul {
+        list-style: none;
+        padding-left: 20px;
+        margin: 0;
+        border-left: 1px solid #e0e0e0;
+        padding-top: 5px;
+      }
+      .json-item {
+        line-height: 1.5;
+        padding: 1px 0;
+      }
+      .json-entry {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+      .json-entry.selected {
+        background-color: #e6f7ff;
+      }
+
+      /* Ikon */
+      .toggle-icon {
+        font-weight: bold;
+        color: #333;
+        margin-right: 5px;
+        width: 10px;
+        cursor: pointer;
+        text-align: center;
+        user-select: none;
+      }
+      .json-type-icon {
+        font-weight: bold;
+        color: #20438a;
+        margin-right: 5px;
+      }
+
+      /* Warna Key */
+      .json-key {
+        color: #333; /* Warna default key */
+        margin-right: 5px;
+        white-space: nowrap;
+      }
+      /* Key untuk Objek atau Array (Biru) */
+      .json-key.container-key {
+        color: #007bff; /* Warna biru */
+        font-weight: bold;
+      }
+
+      /* Warna Value */
+      .json-value-string {
+        color: #8400a8;
+      }
+      .json-value-number {
+        color: #0080ff;
+      }
+      .json-value-boolean {
+        color: #009900;
+      }
+      .json-value-null {
+        color: #afafaf;
+      }
+
+      /* --- Style Lainnya --- */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f4;
+      }
+      .tab-bar {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+        display: flex;
+      }
+      .tab-button {
+        background-color: inherit;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 10px 15px;
+        transition: 0.3s;
+        font-size: 16px;
+        border-right: 1px solid #ccc;
+      }
+      .tab-button.active {
+        background-color: #ccc;
+      }
+      #json-viewer {
+        flex: 1;
+        overflow: auto;
+        padding: 5px;
+        border-right: 1px solid #e0e0e0;
+      }
+      #detail-panel {
+        flex: 1;
+        overflow: auto;
+        padding: 5px;
+      }
+      #detail-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+      }
+      #detail-table th,
+      #detail-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      #detail-table th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Viewer Otomatis (Warna Biru)</h1>
+
+    <input
+      type="file"
+      id="json-file-input"
+      accept=".json"
+      onchange="loadFile()"
+    />
+
+    <p id="error-message" style="color: red; font-weight: bold"></p>
+
+    <div class="tab-bar">
+      <button class="tab-button active" onclick="showPanel('tree-table')">
+        Viewer (Tree + Detail)
+      </button>
+      <button class="tab-button" onclick="showPanel('text-only')">
+        Text (Mentah)
+      </button>
+    </div>
+
+    <div id="tree-table-panel" class="main-content" style="display: flex">
+      <div id="json-viewer">
+        <div id="json-tree-view">
+          Pilih file JSON atau tempelkan data di tab "Text (Mentah)".
+        </div>
+      </div>
+      <div id="detail-panel">
+        <table id="detail-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="2">Pilih item di sebelah kiri.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="text-only-panel" class="tab-content" style="display: none">
+      <textarea
+        id="output-raw"
+        placeholder="Tempelkan atau ketik data JSON Anda di sini..."
+      ></textarea>
+    </div>
+
+    <script>
+      let currentSelectedElement = null;
+      let debounceTimer;
+
+      function debounce(func, delay) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(func, delay);
+      }
+
+      function showPanel(panelName) {
+        document.getElementById("tree-table-panel").style.display = "none";
+        document.getElementById("text-only-panel").style.display = "none";
+
+        if (panelName === "tree-table") {
+          document.getElementById("tree-table-panel").style.display = "flex";
+        } else if (panelName === "text-only") {
+          document.getElementById("text-only-panel").style.display = "block";
+        }
+
+        const buttons = document.querySelectorAll(".tab-button");
+        buttons.forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelector(`button[onclick="showPanel('${panelName}')"]`)
+          .classList.add("active");
+      }
+
+      function loadJsonFromText() {
+        const outputRawElement = document.getElementById("output-raw");
+        const treeViewElement = document.getElementById("json-tree-view");
+
+        const rawJsonContent = outputRawElement.value.trim();
+
+        if (!rawJsonContent) {
+          treeViewElement.innerHTML =
+            'Pilih file JSON atau tempelkan data di tab "Text (Mentah)".';
+          document.querySelector("#detail-table tbody").innerHTML =
+            '<tr><td colspan="2">Pilih item di sebelah kiri.</td></tr>';
+          return;
+        }
+
+        try {
+          const jsonObject = JSON.parse(rawJsonContent);
+
+          outputRawElement.value = JSON.stringify(jsonObject, null, 4);
+
+          renderTree(jsonObject, treeViewElement);
+
+          showPanel("tree-table");
+        } catch (e) {
+          const errorMessage = `❌ GAGAL! JSON TIDAK VALID. Error: ${e.message}`;
+
+          treeViewElement.innerHTML = `<div style="color: red; padding: 10px;">${errorMessage}</div>`;
+
+          document.querySelector("#detail-table tbody").innerHTML =
+            '<tr><td colspan="2">Gagal memuat detail karena JSON tidak valid.</td></tr>';
+
+          showPanel("tree-table");
+        }
+      }
+
+      // Event listener untuk input (memanggil loadJsonFromText setelah 500ms jeda)
+      document.addEventListener("DOMContentLoaded", () => {
+        const outputRawElement = document.getElementById("output-raw");
+        outputRawElement.addEventListener("input", () =>
+          debounce(loadJsonFromText, 500)
+        );
+
+        showPanel("tree-table");
+      });
+
+      function loadFile() {
+        const input = document.getElementById("json-file-input");
+        const outputRawElement = document.getElementById("output-raw");
+        const errorElement = document.getElementById("error-message");
+
+        errorElement.textContent = "";
+
+        if (input.files.length === 0) return;
+
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          // 1. Isi textarea dengan data file
+          outputRawElement.value = event.target.result;
+
+          // 2. PICU RENDER: Panggil fungsi loadJsonFromText() untuk parsing dan rendering
+          loadJsonFromText();
+        };
+        reader.readAsText(file);
+      }
+
+      function toggleNode(event) {
+        const icon = event.currentTarget;
+        const childrenList = icon
+          .closest(".json-item")
+          .querySelector(".json-list");
+
+        if (childrenList) {
+          if (childrenList.style.display === "none") {
+            childrenList.style.display = "block";
+            icon.textContent = "▼";
+          } else {
+            childrenList.style.display = "none";
+            icon.textContent = "►";
+          }
+        }
+        event.stopPropagation();
+      }
+
+      function displayDetails(data, element) {
+        const tbody = document.querySelector("#detail-table tbody");
+        tbody.innerHTML = "";
+
+        if (currentSelectedElement) {
+          currentSelectedElement.classList.remove("selected");
+        }
+        element.classList.add("selected");
+        currentSelectedElement = element;
+
+        if (typeof data === "object" && data !== null) {
+          Object.keys(data).forEach((key) => {
+            const value = data[key];
+            const isPrimitive = typeof value !== "object" || value === null;
+
+            const row = tbody.insertRow();
+            const keyCell = row.insertCell();
+            const valueCell = row.insertCell();
+
+            keyCell.textContent = key.replace(/"/g, "");
+
+            if (isPrimitive) {
+              valueCell.appendChild(createValueSpan(value));
+            } else {
+              valueCell.textContent = Array.isArray(value)
+                ? `[Array, ${Object.keys(value).length} items]`
+                : `{Object, ${Object.keys(value).length} keys}`;
+              valueCell.style.fontStyle = "italic";
+            }
+          });
+        }
+
+        if (tbody.children.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="2">Tidak ada detail yang dapat ditampilkan.</td></tr>';
+        }
+      }
+
+      function renderTree(data, container) {
+        container.innerHTML = "";
+
+        const rootList = document.createElement("ul");
+        rootList.className = "json-list";
+
+        const rootItem = document.createElement("li");
+        rootItem.className = "json-item";
+
+        const rootEntry = document.createElement("div");
+        rootEntry.className = "json-entry";
+
+        const isArray = Array.isArray(data);
+        const typeIconText = isArray ? "[ ]" : "{ }";
+
+        rootEntry.innerHTML = `<span class="toggle-icon" onclick="toggleNode(event)">▼</span>
+                                   <span class="json-type-icon">${typeIconText}</span>
+                                   <span class="json-key container-key">JSON</span>`;
+
+        rootEntry.onclick = (e) => displayDetails(data, rootEntry);
+
+        rootItem.appendChild(rootEntry);
+        rootList.appendChild(rootItem);
+
+        const childrenList = renderChildren(data);
+        rootItem.appendChild(childrenList);
+
+        container.appendChild(rootList);
+
+        rootEntry.click();
+      }
+
+      function renderChildren(data) {
+        const list = document.createElement("ul");
+        list.className = "json-list";
+
+        const keys = Object.keys(data);
+        const isArray = Array.isArray(data);
+
+        keys.forEach((key) => {
+          const value = data[key];
+          const listItem = document.createElement("li");
+          listItem.className = "json-item";
+
+          const entryDiv = document.createElement("div");
+          entryDiv.className = "json-entry";
+
+          const isContainer = typeof value === "object" && value !== null;
+
+          let keyText = isArray ? `${key}:` : `"${key}":`;
+          let typeIconText = isContainer
+            ? Array.isArray(value)
+              ? "[ ]"
+              : "{ }"
+            : "■";
+
+          const toggleIcon = document.createElement("span");
+          toggleIcon.className = "toggle-icon";
+
+          if (isContainer) {
+            toggleIcon.textContent = "►";
+            toggleIcon.onclick = toggleNode;
+          } else {
+            toggleIcon.textContent = " ";
+          }
+          entryDiv.appendChild(toggleIcon);
+
+          const typeIcon = document.createElement("span");
+          typeIcon.className = "json-type-icon";
+          typeIcon.textContent = typeIconText;
+          entryDiv.appendChild(typeIcon);
+
+          const keyElem = document.createElement("span");
+          keyElem.className = "json-key";
+          keyElem.textContent = keyText;
+
+          if (isContainer) {
+            keyElem.classList.add("container-key");
+          }
+
+          entryDiv.appendChild(keyElem);
+
+          listItem.appendChild(entryDiv);
+
+          if (isContainer) {
+            const childList = renderChildren(value);
+            childList.style.display = "none";
+            listItem.appendChild(childList);
+            entryDiv.onclick = (e) => displayDetails(value, entryDiv);
+          } else {
+            entryDiv.appendChild(createValueSpan(value));
+            entryDiv.onclick = (e) =>
+              displayDetails({ [key.replace(/"/g, "")]: value }, entryDiv);
+          }
+
+          list.appendChild(listItem);
+        });
+
+        return list;
+      }
+
+      function createValueSpan(value) {
+        const span = document.createElement("span");
+        let className = "";
+        let text = "";
+
+        if (typeof value === "string") {
+          className = "json-value-string";
+          text = `"${value}"`;
+        } else if (typeof value === "number") {
+          className = "json-value-number";
+          text = value;
+        } else if (typeof value === "boolean") {
+          className = "json-value-boolean";
+          text = value;
+        } else if (value === null) {
+          className = "json-value-null";
+          text = "null";
+        }
+
+        span.className = className;
+        span.textContent = text;
+        return span;
+      }
+    </script>
+  </body>
+</html>
